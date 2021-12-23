@@ -1,7 +1,6 @@
 package com.milkygreen.blockchain.core;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * @author yunmeng.li
@@ -31,4 +30,35 @@ public class TransactionOutput implements Serializable {
      */
     private int index;
 
+    public String getTransactionHash() {
+        return transactionHash;
+    }
+
+    public void setTransactionHash(String transactionHash) {
+        this.transactionHash = transactionHash;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public void setAmount(double amount) {
+        this.amount = amount;
+    }
+
+    public String getAccount() {
+        return account;
+    }
+
+    public void setAccount(String account) {
+        this.account = account;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public void setIndex(int index) {
+        this.index = index;
+    }
 }

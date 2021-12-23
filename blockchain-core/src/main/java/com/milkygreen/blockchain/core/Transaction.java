@@ -40,4 +40,35 @@ public class Transaction implements Serializable {
      */
     private long amount;
 
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
+
+    public TransactionInput getInput() {
+        return input;
+    }
+
+    public void setInput(TransactionInput input) {
+        this.input = input;
+    }
+
+    public List<TransactionOutput> getOutputs() {
+        return outputs;
+    }
+
+    public void setOutputs(List<TransactionOutput> outputs) {
+        this.outputs = outputs;
+    }
+
+    public long getAmount() {
+        return amount;
+    }
+
+    public void setAmount(long amount) {
+        this.amount = amount;
+    }
 }
