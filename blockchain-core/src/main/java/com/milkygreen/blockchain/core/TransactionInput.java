@@ -1,7 +1,6 @@
 package com.milkygreen.blockchain.core;
 
 import java.io.Serializable;
-import java.util.List;
 
 /**
  * 交易输入
@@ -19,7 +18,7 @@ public class TransactionInput implements Serializable {
      * 输入的金额不是凭空而来，而是从之前的交易生成的输出得来的。
      * 你想给别人转账，提前是必须别人先给你转过帐，而且你还没花出去。
      */
-    private List<TransactionOutput> outputs;
+    private TransactionOutput unspentOutput;
 
     /**
      * 此输出的金额
@@ -27,10 +26,6 @@ public class TransactionInput implements Serializable {
      */
     private double amount;
 
-    /**
-     * 付款人的账号
-     */
-    private String payer;
 
 
     public String getTransactionHash() {
@@ -41,12 +36,12 @@ public class TransactionInput implements Serializable {
         this.transactionHash = transactionHash;
     }
 
-    public List<TransactionOutput> getOutputs() {
-        return outputs;
+    public TransactionOutput getUnspentOutput() {
+        return unspentOutput;
     }
 
-    public void setOutputs(List<TransactionOutput> outputs) {
-        this.outputs = outputs;
+    public void setUnspentOutput(TransactionOutput unspentOutput) {
+        this.unspentOutput = unspentOutput;
     }
 
     public double getAmount() {
@@ -55,13 +50,5 @@ public class TransactionInput implements Serializable {
 
     public void setAmount(double amount) {
         this.amount = amount;
-    }
-
-    public String getPayer() {
-        return payer;
-    }
-
-    public void setPayer(String payer) {
-        this.payer = payer;
     }
 }

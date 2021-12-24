@@ -20,9 +20,9 @@ public class Transaction implements Serializable {
 
     /**
      * 交易的输入。
-     * 需要从转账发起人的「余额」中扣除，作为输入的来源
+     * 需要从转账发起人的「未花费输出」中扣除，作为输入的来源
      */
-    private TransactionInput input;
+    private List<TransactionInput> inputs;
 
     /**
      * 交易的输出列表
@@ -33,6 +33,18 @@ public class Transaction implements Serializable {
      * 转给自己的这个output称作找零输出。
      */
     private List<TransactionOutput> outputs;
+
+    /**
+     * 付款人的账号
+     */
+    private String payer;
+
+    /**
+     * 数字签名
+     * 用来验证这笔转账确实是payer发起的，而不是别人伪造的。
+     *
+     */
+    private String signature;
 
     /**
      * 交易金额
@@ -48,12 +60,28 @@ public class Transaction implements Serializable {
         this.hash = hash;
     }
 
-    public TransactionInput getInput() {
-        return input;
+    public List<TransactionInput> getInputs() {
+        return inputs;
     }
 
-    public void setInput(TransactionInput input) {
-        this.input = input;
+    public void setInputs(List<TransactionInput> inputs) {
+        this.inputs = inputs;
+    }
+
+    public String getPayer() {
+        return payer;
+    }
+
+    public void setPayer(String payer) {
+        this.payer = payer;
+    }
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
 
     public List<TransactionOutput> getOutputs() {
