@@ -7,7 +7,7 @@ import java.util.List;
  *
  * @author yunmeng.li
  * @version 1.0.0
- * 交易。代表一个账户给另一个或多个账户的转账操作
+ * 交易。代表一个账户给另一个账户的转账操作
  * 区块链不像银行系统那样有人专门记录每个人的余额，而是从每一笔转账记录中计算出某账号的余额。
  * 所有的交易记录都存在区块链上，每一个区块链节点可以查询到任何一个交易记录。
  */
@@ -35,11 +35,6 @@ public class Transaction implements Serializable {
     private List<TransactionOutput> outputs;
 
     /**
-     * 付款人的账号
-     */
-    private String payer;
-
-    /**
      * 数字签名
      * 用来验证这笔转账确实是payer发起的，而不是别人伪造的。
      *
@@ -51,6 +46,20 @@ public class Transaction implements Serializable {
      * 等于输入或输出的金额
      */
     private long amount;
+
+    /**
+     * 收款方。
+     * 一个交易应该只有一个收款方
+     */
+    private String payee;
+
+    public String getPayee() {
+        return payee;
+    }
+
+    public void setPayee(String payee) {
+        this.payee = payee;
+    }
 
     public String getHash() {
         return hash;
@@ -68,13 +77,6 @@ public class Transaction implements Serializable {
         this.inputs = inputs;
     }
 
-    public String getPayer() {
-        return payer;
-    }
-
-    public void setPayer(String payer) {
-        this.payer = payer;
-    }
 
     public String getSignature() {
         return signature;

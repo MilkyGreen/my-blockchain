@@ -13,7 +13,7 @@ public class TransactionUtil {
      * @return
      */
     public static String calculateHash(Transaction transaction){
-        String msg = transaction.getPayer() + transaction.getAmount() + JsonUtil.toJson(transaction.getInputs()) +
+        String msg = transaction.getPayee() + transaction.getAmount() + JsonUtil.toJson(transaction.getInputs()) +
                 JsonUtil.toJson(transaction.getOutputs());
         return ByteUtil.bytesToHexString(CryptoUtil.doubleDigest(ByteUtil.stringToUtf8Bytes(msg)));
     }

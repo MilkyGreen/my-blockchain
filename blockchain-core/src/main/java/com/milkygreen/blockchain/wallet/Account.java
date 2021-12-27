@@ -1,5 +1,7 @@
 package com.milkygreen.blockchain.wallet;
 
+import java.util.Objects;
+
 /**
  * 账号，由公钥和私钥组成，公钥相当于账户、私钥相当于密码，代表了区块链世界中的一个唯一的地址或账户，区块链中的所有财产、信息都
  * 归属于某一个账户。同时由于各个账户的状态是公开的，除非拥有秘钥，否则谁也无法强制将财产从一个账户中转移。
@@ -32,6 +34,21 @@ public class Account {
         this.privateKey = privateKey;
         this.publicKey = publicKey;
         this.address = address;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return Objects.equals(privateKey, account.privateKey) &&
+                Objects.equals(publicKey, account.publicKey) &&
+                Objects.equals(address, account.address);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(privateKey, publicKey, address);
     }
 
     public String getPrivateKey() {
