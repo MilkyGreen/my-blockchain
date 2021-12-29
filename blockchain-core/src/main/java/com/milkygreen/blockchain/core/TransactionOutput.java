@@ -17,7 +17,7 @@ public class TransactionOutput implements Serializable {
     /**
      * 金额
      */
-    private double amount;
+    private long amount;
 
     /**
      * 收款人的账号（地址）
@@ -38,11 +38,11 @@ public class TransactionOutput implements Serializable {
         this.transactionHash = transactionHash;
     }
 
-    public double getAmount() {
+    public long getAmount() {
         return amount;
     }
 
-    public void setAmount(double amount) {
+    public void setAmount(long amount) {
         this.amount = amount;
     }
 

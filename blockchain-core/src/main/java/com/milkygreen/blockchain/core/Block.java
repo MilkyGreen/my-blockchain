@@ -48,7 +48,7 @@ public class Block implements Serializable {
      * 随机字符串
      * 由于需要挖出正确的区块hash，所以每次都需要随机一个字符串参与hash计算，使得计算结果不同，直到算出一个符合条件的hash
      */
-    private String nonce;
+    private long nonce;
 
     public String getHash() {
         return hash;
@@ -90,11 +90,11 @@ public class Block implements Serializable {
         this.timestamp = timestamp;
     }
 
-    public String getNonce() {
+    public long getNonce() {
         return nonce;
     }
 
-    public void setNonce(String nonce) {
+    public void setNonce(long nonce) {
         this.nonce = nonce;
     }
 }

@@ -35,13 +35,6 @@ public class Transaction implements Serializable {
     private List<TransactionOutput> outputs;
 
     /**
-     * 数字签名
-     * 用来验证这笔转账确实是payer发起的，而不是别人伪造的。
-     *
-     */
-    private String signature;
-
-    /**
      * 交易金额
      * 等于输入或输出的金额
      */
@@ -52,6 +45,16 @@ public class Transaction implements Serializable {
      * 一个交易应该只有一个收款方
      */
     private String payee;
+
+    /**
+     * 交易生成时间戳
+     */
+    private long timestamp;
+
+    /**
+     * 随机数，用来参与hash（并不像block一样需要达到某个目标，只是为了增加伪造的难度）
+     */
+    private long nonce;
 
     public String getPayee() {
         return payee;
@@ -77,15 +80,6 @@ public class Transaction implements Serializable {
         this.inputs = inputs;
     }
 
-
-    public String getSignature() {
-        return signature;
-    }
-
-    public void setSignature(String signature) {
-        this.signature = signature;
-    }
-
     public List<TransactionOutput> getOutputs() {
         return outputs;
     }
@@ -100,5 +94,21 @@ public class Transaction implements Serializable {
 
     public void setAmount(long amount) {
         this.amount = amount;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(long timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public long getNonce() {
+        return nonce;
+    }
+
+    public void setNonce(long nonce) {
+        this.nonce = nonce;
     }
 }

@@ -21,12 +21,16 @@ public class TransactionInput implements Serializable {
     private TransactionOutput unspentOutput;
 
     /**
-     * 此输出的金额
-     * 可以由所有的output的金额相加得来
+     * 数字签名
+     * 用来验证这笔转账确实是payer发起的，而不是别人伪造的。
+     *
      */
-    private double amount;
+    private String signature;
 
-
+    /**
+     * 付款人公钥，用来让别人对签名进行验证
+     */
+    private String publicKey;
 
     public String getTransactionHash() {
         return transactionHash;
@@ -44,11 +48,19 @@ public class TransactionInput implements Serializable {
         this.unspentOutput = unspentOutput;
     }
 
-    public double getAmount() {
-        return amount;
+    public String getSignature() {
+        return signature;
     }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
+    public void setSignature(String signature) {
+        this.signature = signature;
+    }
+
+    public String getPublicKey() {
+        return publicKey;
+    }
+
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 }
