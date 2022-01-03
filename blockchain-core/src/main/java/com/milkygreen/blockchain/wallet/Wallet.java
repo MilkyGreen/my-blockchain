@@ -128,6 +128,23 @@ public class Wallet {
         }
     }
 
+    /**
+     * 查询所有余额
+     * @return
+     */
+    public long getBalance(){
+        int balance = 0;
+        for (Account account : accounts) {
+            Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(account.getAddress());
+            if(transactionOutputs != null){
+                for (TransactionOutput output : transactionOutputs) {
+                    balance += output.getAmount();
+                }
+            }
+        }
+        return balance;
+    }
+
     public Set<Account> getAccounts() {
         return accounts;
     }
