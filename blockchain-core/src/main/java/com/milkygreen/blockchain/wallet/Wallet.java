@@ -1,12 +1,12 @@
 package com.milkygreen.blockchain.wallet;
 
+import com.milkygreen.blockchain.core.Miner;
 import com.milkygreen.blockchain.core.Transaction;
 import com.milkygreen.blockchain.core.TransactionInput;
 import com.milkygreen.blockchain.core.TransactionOutput;
 import com.milkygreen.blockchain.db.DBUtil;
 import com.milkygreen.blockchain.util.ByteUtil;
 import com.milkygreen.blockchain.util.CryptoUtil;
-import com.milkygreen.blockchain.util.JsonUtil;
 import com.milkygreen.blockchain.util.TransactionUtil;
 
 import java.util.ArrayList;
@@ -124,6 +124,7 @@ public class Wallet {
                 outputs.add(changeOutput);
             }
             transaction.setOutputs(outputs);
+            transaction.setType(Transaction.TRANSACTION_TYPE_NORMAL);
             return transaction;
         }
     }
@@ -143,6 +144,33 @@ public class Wallet {
             }
         }
         return balance;
+    }
+
+    /**
+     * 构建挖矿激励交易
+     * 挖出block的节点会得到50块作为奖励。这50块可以认为是系统发放的，但是去中心化的区块链中并没有「系统」这一方，
+     * 大家都是平等的，于是挖到矿的节点构建一个特殊的交易，没有输入，只有给自己50块的输出。其他节点接收到之后会先验证确实你挖出block了，
+     * 才会承认这笔奖励交易。
+     * @return 奖励的交易
+     */
+    public Transaction genIncentives(Account account){
+        Transaction transaction = new Transaction();
+        transaction.setType(Transaction.TRANSACTION_TYPE_INCENTIVE);
+        transaction.setTimestamp(System.currentTimeMillis());
+        transaction.setAmount(Miner.incentives);
+        transaction.setPayee(account.getAddress());
+        transaction.setNonce(ByteUtil.bytesToUint64(ByteUtil.random32Bytes()));
+        String hash = TransactionUtil.calculateHash(transaction);
+        transaction.setHash(hash);
+        TransactionOutput transactionOutput = new TransactionOutput();
+        transactionOutput.setTransactionHash(hash);
+        transactionOutput.setIndex(0);
+        transactionOutput.setAmount(Miner.incentives);
+        transactionOutput.setAccount(account.getAddress());
+        List<TransactionOutput> outputs = new ArrayList<>();
+        outputs.add(transactionOutput);
+        transaction.setOutputs(outputs);
+        return transaction;
     }
 
     public Set<Account> getAccounts() {

@@ -1,5 +1,7 @@
 package com.milkygreen.blockchain.core;
 
+import com.milkygreen.blockchain.db.DBUtil;
+
 /**
  * @author yunmeng.li
  * @version 1.0.0
@@ -45,4 +47,14 @@ public class Blockchain {
 
         return null;
     }
+
+    /**
+     * 获取当前链上的最新区块
+     * @return 区块
+     */
+    public Block getTailBlock(){
+        return DBUtil.getTailBlock();
+    }
+
+
 }

@@ -13,6 +13,9 @@ import java.util.List;
  */
 public class Transaction implements Serializable {
 
+    public final static int TRANSACTION_TYPE_INCENTIVE = 0;
+    public final static int TRANSACTION_TYPE_NORMAL = 1;
+
     /**
      * 交易的hash值
      */
@@ -55,6 +58,13 @@ public class Transaction implements Serializable {
      * 随机数，用来参与hash（并不像block一样需要达到某个目标，只是为了增加伪造的难度）
      */
     private long nonce;
+
+    /**
+     * 交易类型：
+     * 0 挖矿奖励
+     * 1 普通交易
+     */
+    private int type;
 
     public String getPayee() {
         return payee;
@@ -110,5 +120,13 @@ public class Transaction implements Serializable {
 
     public void setNonce(long nonce) {
         this.nonce = nonce;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

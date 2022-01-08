@@ -1,5 +1,8 @@
 package com.milkygreen.blockchain.core;
 
+import com.milkygreen.blockchain.util.ByteUtil;
+import com.milkygreen.blockchain.util.CryptoUtil;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -50,6 +53,19 @@ public class Block implements Serializable {
      */
     private long nonce;
 
+    /**
+     * 代表区块中所有交易的hash摘要。
+     */
+    private String merkleTree;
+
+    /**
+     * 计算区块的hash值
+     */
+    public void calculateHash(){
+        String msg = preHash + timestamp + nonce + merkleTree;
+        this.hash = ByteUtil.bytesToHexString(CryptoUtil.doubleDigest(ByteUtil.stringToUtf8Bytes(msg)));
+    }
+
     public String getHash() {
         return hash;
     }
@@ -96,5 +112,13 @@ public class Block implements Serializable {
 
     public void setNonce(long nonce) {
         this.nonce = nonce;
+    }
+
+    public String getMerkleTree() {
+        return merkleTree;
+    }
+
+    public void setMerkleTree(String merkleTree) {
+        this.merkleTree = merkleTree;
     }
 }

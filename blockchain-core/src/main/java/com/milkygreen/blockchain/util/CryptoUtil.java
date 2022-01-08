@@ -21,6 +21,8 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import java.io.ByteArrayOutputStream;
 import java.math.BigInteger;
 import java.security.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 加密相关方法工具类
@@ -346,5 +348,21 @@ public class CryptoUtil {
      */
     private static boolean isCanonical(BigInteger s) {
         return s.compareTo(HALF_CURVE_ORDER) <= 0;
+    }
+
+    public static byte[] calculateMerkleTreeRoot(List<byte[]> datas) {
+        List<byte[]> tree = new ArrayList<>(datas);
+        int size = tree.size();
+        int levelOffset = 0;
+        for (int levelSize = size; levelSize > 1; levelSize = (levelSize + 1) / 2) {
+            for (int left = 0; left < levelSize; left += 2) {
+                int right = Math.min(left + 1, levelSize - 1);
+                byte[] leftBytes = tree.get(levelOffset + left);
+                byte[] rightBytes = tree.get(levelOffset + right);
+                tree.add(doubleDigest(ByteUtil.concatenate(leftBytes, rightBytes)));
+            }
+            levelOffset += levelSize;
+        }
+        return tree.get(tree.size()-1);
     }
 }

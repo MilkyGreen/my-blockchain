@@ -14,6 +14,11 @@ import java.util.*;
 public class DBUtil {
 
     /**
+     * 区块链的最新高度
+     */
+    public static long blockchainHeight = 0;
+
+    /**
      * hash-block 结构
      */
     public static Map<String, Block> hashBlockDB = new HashMap<>();
@@ -38,10 +43,23 @@ public class DBUtil {
      * 未确认交易
      * 区块链网络中发生的交易，还没有被打包进任何一个区块，暂时放在这里，等矿工来取
      */
-    public static Set<Transaction> unConfirmTransactionPool = new HashSet<>();
+    public static Map<String, Transaction> unConfirmTransactionPool = new HashMap<>();
 
     /**
      * 地址-账号
      */
     public static Map<String, Account> accountDB = new HashMap<>();
+
+    /**
+     * 获取最新区块
+     * @return 区块
+     */
+    public static Block getTailBlock(){
+        String hash = HeightHashBlockDB.get(blockchainHeight);
+        Block block = hashBlockDB.get(hash);
+        return block;
+    }
+
+
+
 }

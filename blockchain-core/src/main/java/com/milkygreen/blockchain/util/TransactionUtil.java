@@ -3,6 +3,9 @@ package com.milkygreen.blockchain.util;
 import com.milkygreen.blockchain.core.Transaction;
 import com.milkygreen.blockchain.core.TransactionInput;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * 交易相关工具类
  */
@@ -37,5 +40,12 @@ public class TransactionUtil {
     public static boolean validateSignature(String pubicKey,String signature,TransactionInput transactionInput){
         String data = transactionInput.getTransactionHash() + "-" + JsonUtil.toJson(transactionInput.getUnspentOutput());
         return CryptoUtil.verifySignature(pubicKey,ByteUtil.hexStringToBytes(data),ByteUtil.hexStringToBytes(signature));
+    }
+
+    public static String genMerkleTree(List<Transaction> list){
+        List<byte[]> bytesList = new ArrayList<>();
+        list.forEach(transaction -> bytesList.add(ByteUtil.hexStringToBytes(transaction.getHash())));
+        byte[] bytes = CryptoUtil.calculateMerkleTreeRoot(bytesList);
+        return ByteUtil.bytesToHexString(bytes);
     }
 }
