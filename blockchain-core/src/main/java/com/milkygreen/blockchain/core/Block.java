@@ -61,9 +61,9 @@ public class Block implements Serializable {
     /**
      * 计算区块的hash值
      */
-    public void calculateHash(){
-        String msg = preHash + timestamp + nonce + merkleTree;
-        this.hash = ByteUtil.bytesToHexString(CryptoUtil.doubleDigest(ByteUtil.stringToUtf8Bytes(msg)));
+    public static String calculateHash(Block block){
+        String msg = block.getPreHash() + block.getTimestamp() + block.getNonce() + block.getMerkleTree();
+        return ByteUtil.bytesToHexString(CryptoUtil.doubleDigest(ByteUtil.stringToUtf8Bytes(msg)));
     }
 
     public String getHash() {

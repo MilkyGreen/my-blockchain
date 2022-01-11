@@ -50,7 +50,23 @@ public class Miner implements Runnable {
      */
     public static long transactionLimit = 1000;
 
+    /**
+     * 钱包实例，挖矿的奖励要放到这里
+     */
     private Wallet wallet;
+
+    /**
+     * 区块链实例，在这个区块链上挖矿
+     */
+    private Blockchain blockchain;
+
+    public Blockchain getBlockchain() {
+        return blockchain;
+    }
+
+    public void setBlockchain(Blockchain blockchain) {
+        this.blockchain = blockchain;
+    }
 
     public Wallet getWallet() {
         return wallet;
@@ -85,15 +101,18 @@ public class Miner implements Runnable {
                 block.setTimestamp(System.currentTimeMillis());
                 block.setMerkleTree(TransactionUtil.genMerkleTree(transactions));
                 block.setNonce(ByteUtil.bytesToUint64(ByteUtil.random32Bytes()));
-                block.calculateHash();
-                // 不停的随机nonce、计算hash，直到符合difficulty要求。
+                String hash = Block.calculateHash(block);
+                block.setHash(hash);
+                // 不停的随机nonce并计算hash，直到符合difficulty要求。
                 while(new BigInteger(difficulty,16).compareTo(new BigInteger(block.getHash(),16)) <= 0){
                     block.setNonce(ByteUtil.bytesToUint64(ByteUtil.random32Bytes()));
-                    block.calculateHash();
+                    hash = Block.calculateHash(block);
+                    block.setHash(hash);
                 }
                 // 挖矿成功，将奖励放入钱包，尽快广播block!
                 wallet.addAccount(account);
                 System.out.println("挖矿成功！");
+                this.sendBlock(block);
             } else {
                 try {
                     Thread.sleep(500);
@@ -104,6 +123,13 @@ public class Miner implements Runnable {
         }
     }
 
+    /**
+     * 将挖到的block发送出去
+     * @param block 区块
+     */
+    public void sendBlock(Block block){
+        this.blockchain.addBlock(block);
+    }
 
     /**
      * 获取一批未确认交易列表
