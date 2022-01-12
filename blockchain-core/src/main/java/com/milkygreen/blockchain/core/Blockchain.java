@@ -1,9 +1,12 @@
 package com.milkygreen.blockchain.core;
 
 import com.milkygreen.blockchain.db.DBUtil;
+import com.milkygreen.blockchain.util.TransactionUtil;
 
 import java.math.BigInteger;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author yunmeng.li
@@ -34,11 +37,30 @@ public class Blockchain {
             System.out.println("区块的hash值不符合difficulty要求！");
             return;
         }
+        List<Transaction> transactions = block.getTransactions();
+        String merkleTree = TransactionUtil.genMerkleTree(transactions);
+        if(!merkleTree.equals(block.getMerkleTree())){
+            System.out.println("区块的merkleTree值不正确！");
+            return;
+        }
         // 校验每笔交易是否合法、有重复花费
-
+        if(!checkTransactions(transactions)){
+            return;
+        }
 
         // 校验通过之后，数据存入本地
+        this.saveBlock(block);
+        System.out.println("新区块已接受！");
+    }
 
+    /**
+     * 将区块保存到本地区块链上
+     * @param block Block
+     * @return
+     */
+    private boolean saveBlock(Block block){
+
+        return true;
     }
 
     /**
@@ -47,8 +69,66 @@ public class Blockchain {
      * @return
      */
     private boolean checkTransactions(List<Transaction> transactions){
+        Set<TransactionOutput> outputSet = new HashSet<>();
 
+        for (Transaction transaction : transactions) {
+
+            String hash = TransactionUtil.calculateHash(transaction);
+            if(!hash.equals(transaction.getHash())){
+                System.out.println("交易的hash值非法！");
+                return false;
+            }
+
+            List<TransactionInput> inputs = transaction.getInputs();
+            long inputAmount = 0;
+            for (TransactionInput input : inputs) {
+                TransactionOutput unspentOutput = input.getUnspentOutput();
+                if(outputSet.contains(unspentOutput)){
+                    System.out.println("交易中含有重复的未花费输出！");
+                    return false;
+                }
+                outputSet.add(unspentOutput);
+                inputAmount += unspentOutput.getAmount();
+                if(!checkTransactionInput(input)){
+                    return false;
+                }
+            }
+
+            List<TransactionOutput> outputs = transaction.getOutputs();
+            int outputAmount = 0;
+            for (TransactionOutput output : outputs) {
+                outputAmount += output.getAmount();
+            }
+
+            if(inputAmount != outputAmount || inputAmount != transaction.getAmount() || outputAmount != transaction.getAmount()){
+                System.out.println("交易的金额不匹配！");
+                return false;
+            }
+        }
         return true;
+    }
+
+    /**
+     * 校验交易的TransactionInput是否合法。
+     * 首先校验所使用的未花费输出是否存在
+     * 其次校验交易签名是否正确，即是否是UTXO持有者发起的交易
+     * @param input
+     * @return
+     */
+    public boolean checkTransactionInput(TransactionInput input){
+        TransactionOutput unspentOutput = input.getUnspentOutput();
+        Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(unspentOutput.getAccount());
+        if(transactionOutputs.contains(unspentOutput)){
+            String signature = input.getSignature();
+            if(!TransactionUtil.validateSignature(input.getPublicKey(),signature,input)){
+                System.out.println("交易的input签名未校验通过！");
+                return false;
+            }
+            return true;
+        }else{
+            System.out.println("试图花费不存在的UTXO！");
+            return false;
+        }
     }
 
     /**

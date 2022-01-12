@@ -1,6 +1,7 @@
 package com.milkygreen.blockchain.core;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * @author yunmeng.li
@@ -60,5 +61,21 @@ public class TransactionOutput implements Serializable {
 
     public void setIndex(int index) {
         this.index = index;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TransactionOutput that = (TransactionOutput) o;
+        return amount == that.amount &&
+                index == that.index &&
+                Objects.equals(transactionHash, that.transactionHash) &&
+                Objects.equals(account, that.account);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(transactionHash, amount, account, index);
     }
 }

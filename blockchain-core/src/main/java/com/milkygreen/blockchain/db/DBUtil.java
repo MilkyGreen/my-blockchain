@@ -2,7 +2,9 @@ package com.milkygreen.blockchain.db;
 
 import com.milkygreen.blockchain.core.Block;
 import com.milkygreen.blockchain.core.Transaction;
+import com.milkygreen.blockchain.core.TransactionInput;
 import com.milkygreen.blockchain.core.TransactionOutput;
+import com.milkygreen.blockchain.util.TransactionUtil;
 import com.milkygreen.blockchain.wallet.Account;
 
 import java.util.*;
