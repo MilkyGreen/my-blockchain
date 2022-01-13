@@ -2,16 +2,15 @@ package com.milkygreen.blockchain.db;
 
 import com.milkygreen.blockchain.core.Block;
 import com.milkygreen.blockchain.core.Transaction;
-import com.milkygreen.blockchain.core.TransactionInput;
 import com.milkygreen.blockchain.core.TransactionOutput;
-import com.milkygreen.blockchain.util.TransactionUtil;
 import com.milkygreen.blockchain.wallet.Account;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 持久化工具，用于保存区块链上的所以数据(目前仅保存在内存中，后续可以用一些kv数据库实现本地保存)
- *
  */
 public class DBUtil {
 
@@ -33,7 +32,7 @@ public class DBUtil {
     /**
      * hash-transaction结构
      */
-    public static Map<String, Block> hashTransactionDB = new HashMap<>();
+    public static Map<String, Transaction> hashTransactionDB = new HashMap<>();
 
     /**
      * 未花费输出,代表一个账户的「余额」
@@ -48,20 +47,20 @@ public class DBUtil {
     public static Map<String, Transaction> unConfirmTransactionPool = new HashMap<>();
 
     /**
-     * 地址-账号
+     * 保存本节点的地址-账号
      */
     public static Map<String, Account> accountDB = new HashMap<>();
 
     /**
      * 获取最新区块
+     *
      * @return 区块
      */
-    public static Block getTailBlock(){
+    public static Block getTailBlock() {
         String hash = HeightHashBlockDB.get(blockchainHeight);
         Block block = hashBlockDB.get(hash);
         return block;
     }
-
 
 
 }

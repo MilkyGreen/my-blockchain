@@ -10,6 +10,7 @@ import com.milkygreen.blockchain.util.CryptoUtil;
 import com.milkygreen.blockchain.util.TransactionUtil;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -20,16 +21,11 @@ import java.util.Set;
 public class Wallet {
 
     /**
-     * 账户集合
-     */
-    private Set<Account> accounts;
-
-    /**
      * 新增账户
      * @param account
      */
     public void addAccount(Account account){
-        accounts.add(account);
+        DBUtil.accountDB.put(account.getAddress(),account);
     }
 
     /**
@@ -37,13 +33,7 @@ public class Wallet {
      * @param address
      */
     public void removeAccount(String address){
-        Account target = null;
-        for (Account account : accounts) {
-            if(account.getAddress().equals(address)){
-                target = account;
-            }
-        }
-        accounts.remove(target);
+        DBUtil.accountDB.remove(address);
     }
 
     /**
@@ -57,6 +47,8 @@ public class Wallet {
     public Transaction pay(long amount,String payee){
         long sum = 0;
         List<TransactionOutput> payeeOutputs = new ArrayList<>();
+        // 找出子节点所有账户
+        Collection<Account> accounts = DBUtil.accountDB.values();
         out : for (Account account : accounts) {
             // 从自己的账户中，找未花费输出，看看是否能凑出要支付的金额
             Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(account.getAddress());
@@ -135,6 +127,7 @@ public class Wallet {
      */
     public long getBalance(){
         int balance = 0;
+        Collection<Account> accounts = DBUtil.accountDB.values();
         for (Account account : accounts) {
             Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(account.getAddress());
             if(transactionOutputs != null){
@@ -171,13 +164,5 @@ public class Wallet {
         outputs.add(transactionOutput);
         transaction.setOutputs(outputs);
         return transaction;
-    }
-
-    public Set<Account> getAccounts() {
-        return accounts;
-    }
-
-    public void setAccounts(Set<Account> accounts) {
-        this.accounts = accounts;
     }
 }

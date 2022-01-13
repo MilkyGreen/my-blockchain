@@ -13,7 +13,14 @@ import java.util.List;
  */
 public class Transaction implements Serializable {
 
+    /**
+     * 交易类型：挖矿激励
+     */
     public final static int TRANSACTION_TYPE_INCENTIVE = 0;
+
+    /**
+     * 交易类型：普通交易
+     */
     public final static int TRANSACTION_TYPE_NORMAL = 1;
 
     /**

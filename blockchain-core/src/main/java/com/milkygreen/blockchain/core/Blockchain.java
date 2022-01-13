@@ -6,6 +6,7 @@ import com.milkygreen.blockchain.util.TransactionUtil;
 import java.math.BigInteger;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -18,33 +19,34 @@ public class Blockchain {
     /**
      * 新增一个区块到区块链尾部
      * 一个区块需要通过一系列校验才能被接受。如:区块本身的hash值合法、区块上的交易数据结构正确、区块不包含重复的交易等等
+     *
      * @param block 区块
      */
-    public void addBlock(Block block){
+    public void addBlock(Block block) {
         // 判断接收到的区块是否是本地最新高度加一
         Block preBlock = getTailBlock();
-        if(!preBlock.getHash().equals(block.getPreHash()) || preBlock.getHeight()+1 != block.getHeight()){
+        if (!preBlock.getHash().equals(block.getPreHash()) || preBlock.getHeight() + 1 != block.getHeight()) {
             System.out.println("接收到非法的区块！");
             return;
         }
         // 校验区块hash
         String hash = Block.calculateHash(block);
-        if(!hash.equals(block.getHash())){
+        if (!hash.equals(block.getHash())) {
             System.out.println("区块的hash值不正确！");
             return;
         }
-        if(new BigInteger(Miner.difficulty,16).compareTo(new BigInteger(block.getHash(),16)) <= 0){
+        if (new BigInteger(Miner.difficulty, 16).compareTo(new BigInteger(block.getHash(), 16)) <= 0) {
             System.out.println("区块的hash值不符合difficulty要求！");
             return;
         }
         List<Transaction> transactions = block.getTransactions();
         String merkleTree = TransactionUtil.genMerkleTree(transactions);
-        if(!merkleTree.equals(block.getMerkleTree())){
+        if (!merkleTree.equals(block.getMerkleTree())) {
             System.out.println("区块的merkleTree值不正确！");
             return;
         }
         // 校验每笔交易是否合法、有重复花费
-        if(!checkTransactions(transactions)){
+        if (!checkTransactions(transactions)) {
             return;
         }
 
@@ -55,52 +57,85 @@ public class Blockchain {
 
     /**
      * 将区块保存到本地区块链上
+     *
      * @param block Block
      * @return
      */
-    private boolean saveBlock(Block block){
+    private void saveBlock(Block block) {
+        // 保存区块高度
+        DBUtil.blockchainHeight = block.getHeight();
+        // 保存hash-区块
+        DBUtil.hashBlockDB.put(block.getHash(), block);
+        DBUtil.HeightHashBlockDB.put(block.getHeight(), block.getHash());
+        // 保存交易数据
+        List<Transaction> transactions = block.getTransactions();
+        for (Transaction transaction : transactions) {
+            // 从未确认交易池中删除
+            Map<String, Transaction> unConfirmTransactionPool = DBUtil.unConfirmTransactionPool;
+            unConfirmTransactionPool.remove(transaction.getHash());
 
-        return true;
+            // 保存交易本身
+            DBUtil.hashTransactionDB.put(transaction.getHash(), transaction);
+            List<TransactionInput> inputs = transaction.getInputs();
+            List<TransactionOutput> outputs = transaction.getOutputs();
+            for (TransactionInput transactionInput : inputs) {
+                // 将input中的UTXO，从付款人账户中删除
+                TransactionOutput unspentOutput = transactionInput.getUnspentOutput();
+                Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(unspentOutput.getAccount());
+                transactionOutputs.remove(unspentOutput);
+                DBUtil.UTXO.put(unspentOutput.getAccount(), transactionOutputs);
+            }
+            // 将新的output放入到相应收款人的账户中
+            for (TransactionOutput transactionOutput : outputs) {
+                Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(transactionOutput.getAccount());
+                transactionOutputs.add(transactionOutput);
+                DBUtil.UTXO.put(transactionOutput.getAccount(), transactionOutputs);
+            }
+        }
+        System.out.println("区块入库成功！");
     }
 
     /**
      * 校验每笔交易的正确性：input是否正确、签名是否正确、是否有重复的未花费输出
+     *
      * @param transactions
      * @return
      */
-    private boolean checkTransactions(List<Transaction> transactions){
+    private boolean checkTransactions(List<Transaction> transactions) {
         Set<TransactionOutput> outputSet = new HashSet<>();
 
         for (Transaction transaction : transactions) {
 
             String hash = TransactionUtil.calculateHash(transaction);
-            if(!hash.equals(transaction.getHash())){
+            if (!hash.equals(transaction.getHash())) {
                 System.out.println("交易的hash值非法！");
                 return false;
             }
 
             List<TransactionInput> inputs = transaction.getInputs();
             long inputAmount = 0;
-            for (TransactionInput input : inputs) {
-                TransactionOutput unspentOutput = input.getUnspentOutput();
-                if(outputSet.contains(unspentOutput)){
-                    System.out.println("交易中含有重复的未花费输出！");
-                    return false;
-                }
-                outputSet.add(unspentOutput);
-                inputAmount += unspentOutput.getAmount();
-                if(!checkTransactionInput(input)){
-                    return false;
+            // 如果是普通交易，需要验证Input的来源。
+            if(transaction.getType() == Transaction.TRANSACTION_TYPE_NORMAL ){
+                for (TransactionInput input : inputs) {
+                    if (!checkTransactionInput(input)) {
+                        return false;
+                    }
+                    TransactionOutput unspentOutput = input.getUnspentOutput();
+                    if (outputSet.contains(unspentOutput)) {
+                        System.out.println("交易中含有重复的未花费输出！");
+                        return false;
+                    }
+                    outputSet.add(unspentOutput);
+                    inputAmount += unspentOutput.getAmount();
                 }
             }
-
             List<TransactionOutput> outputs = transaction.getOutputs();
             int outputAmount = 0;
             for (TransactionOutput output : outputs) {
                 outputAmount += output.getAmount();
             }
 
-            if(inputAmount != outputAmount || inputAmount != transaction.getAmount() || outputAmount != transaction.getAmount()){
+            if (inputAmount != outputAmount || inputAmount != transaction.getAmount() || outputAmount != transaction.getAmount()) {
                 System.out.println("交易的金额不匹配！");
                 return false;
             }
@@ -112,20 +147,21 @@ public class Blockchain {
      * 校验交易的TransactionInput是否合法。
      * 首先校验所使用的未花费输出是否存在
      * 其次校验交易签名是否正确，即是否是UTXO持有者发起的交易
+     *
      * @param input
      * @return
      */
-    public boolean checkTransactionInput(TransactionInput input){
+    public boolean checkTransactionInput(TransactionInput input) {
         TransactionOutput unspentOutput = input.getUnspentOutput();
         Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(unspentOutput.getAccount());
-        if(transactionOutputs.contains(unspentOutput)){
+        if (transactionOutputs.contains(unspentOutput)) {
             String signature = input.getSignature();
-            if(!TransactionUtil.validateSignature(input.getPublicKey(),signature,input)){
+            if (!TransactionUtil.validateSignature(input.getPublicKey(), signature, input)) {
                 System.out.println("交易的input签名未校验通过！");
                 return false;
             }
             return true;
-        }else{
+        } else {
             System.out.println("试图花费不存在的UTXO！");
             return false;
         }
@@ -133,39 +169,40 @@ public class Blockchain {
 
     /**
      * 根据hash查询一个区块
+     *
      * @param hash 区块hash
      * @return 区块
      */
-    public Block getBlockByHash(String hash){
-
-        return null;
+    public Block getBlockByHash(String hash) {
+        return DBUtil.hashBlockDB.get(hash);
     }
 
     /**
      * 根据区块高度查询区块
+     *
      * @param height 区块高度
      * @return 区块
      */
-    public Block getBlockByHeight(long height){
-
-        return null;
+    public Block getBlockByHeight(long height) {
+        return DBUtil.hashBlockDB.get(DBUtil.HeightHashBlockDB.get(height));
     }
 
     /**
      * 根据交易hash查询交易
+     *
      * @param hash 交易hash
      * @return 交易
      */
-    public Transaction getTransactionByHash(String hash){
-
-        return null;
+    public Transaction getTransactionByHash(String hash) {
+        return DBUtil.hashTransactionDB.get(hash);
     }
 
     /**
      * 获取当前链上的最新区块
+     *
      * @return 区块
      */
-    public Block getTailBlock(){
+    public Block getTailBlock() {
         return DBUtil.getTailBlock();
     }
 
