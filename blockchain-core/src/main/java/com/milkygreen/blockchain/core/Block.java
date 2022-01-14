@@ -8,9 +8,21 @@ import java.util.List;
 
 /**
  * <p>
- *     区块，一个区块包含了一系列交易
+ *     区块
+ *     区块链的基本单元，区块链网络中的消息都保存在各个区块上。
+ *     区块的hash值在整个系统中唯一，可以通过hash值来定位到一个具体的区块。
  */
 public class Block implements Serializable {
+
+    /**
+     * 区块类型:普通区块
+     */
+    public final static int NORMAL_BLOCK = 1;
+
+    /**
+     * 区块类型：创世区块
+     */
+    public final static int GENESIS_BLOCK = 0;
 
     /**
      * 整个区块的hash值，标识一个唯一的区块。
@@ -57,6 +69,12 @@ public class Block implements Serializable {
      * 代表区块中所有交易的hash摘要。
      */
     private String merkleTree;
+
+    /**
+     * 区块类型。
+     *
+     */
+    private int type;
 
     /**
      * 计算区块的hash值
@@ -120,5 +138,13 @@ public class Block implements Serializable {
 
     public void setMerkleTree(String merkleTree) {
         this.merkleTree = merkleTree;
+    }
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
     }
 }

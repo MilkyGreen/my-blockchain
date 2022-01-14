@@ -1,18 +1,21 @@
 package com.milkygreen.blockchain.core;
 
 import com.milkygreen.blockchain.db.DBUtil;
+import com.milkygreen.blockchain.util.ByteUtil;
+import com.milkygreen.blockchain.util.CryptoUtil;
 import com.milkygreen.blockchain.util.TransactionUtil;
+import com.milkygreen.blockchain.wallet.Account;
+import com.milkygreen.blockchain.wallet.Wallet;
 
 import java.math.BigInteger;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
- * @author yunmeng.li
- * @version 1.0.0
- * 区块链，提供对这个链上数据的所有操作方法
+ * 区块链
+ * 区块以链表的形式连接起来，构成区块链。
+ * 可以理解为一个append only的分布式日志数据库，记录的是一笔笔的交易。新的区块产生之后会被追加到区块链的尾部，作为区块链的一部分。
+ * 每一个节点（peer）都保存了一份区块链的完整数据，大家通过相同的方法来管理各自的区块链，最终达到数据一致。
+ * （在大部分完善的区块链系统中，并不是所有节点都保存完整的区块链数据，一些轻量节点只保存部分，一些钱包节点则只负责交易，数据交给完整节点去校验）
  */
 public class Blockchain {
 
@@ -168,6 +171,39 @@ public class Blockchain {
     }
 
     /**
+     * 构建创世区块
+     * 什么是创世区块？区块是由交易构成的，必须有交易产生之后矿工才能构建区块，交易需要有输入，输入需要有输出...
+     * 一个区块链系统第一次运行的时候，是没有任何人有余额的,没有余额无法交易，无法交易就无法挖矿，无法挖矿就没有奖励（无法新增货币）
+     * 因此必须在一开始初始化出一些货币出来，以便可以发起后续的交易。这些初始的货币也是以交易的形式发放，该交易所在的区块叫创世区块，是区块链中的第一个区块。
+     * @param wallet 创建节点的钱包，用于发放激励
+     */
+    public Block createGenesisBlock(Wallet wallet){
+        // 创建一个挖矿激励交易给初始节点
+        Account account = CryptoUtil.randomAccount();
+        Transaction transaction = wallet.genIncentives(account);
+
+        String merkleTree = TransactionUtil.genMerkleTree(Collections.singletonList(transaction));
+        Block block = new Block();
+        block.setMerkleTree(merkleTree);
+        block.setHeight(0);
+        block.setTimestamp(System.currentTimeMillis());
+        block.setTransactions(Collections.singletonList(transaction));
+        block.setType(Block.GENESIS_BLOCK);
+        block.setNonce(ByteUtil.bytesToUint64(ByteUtil.random32Bytes()));
+        String hash = Block.calculateHash(block);
+        block.setHash(hash);
+        // 创世区块依然需要符合hash难度要求（在动态调整难度的区块链系统中，初始的时候难度应该是很小的）
+        while(new BigInteger(Miner.difficulty,16).compareTo(new BigInteger(block.getHash(),16)) <= 0){
+            block.setNonce(ByteUtil.bytesToUint64(ByteUtil.random32Bytes()));
+            hash = Block.calculateHash(block);
+            block.setHash(hash);
+        }
+        wallet.addAccount(account);
+        System.out.println("创世区块构建成功！");
+        return block;
+    }
+
+    /**
      * 根据hash查询一个区块
      *
      * @param hash 区块hash
@@ -205,6 +241,5 @@ public class Blockchain {
     public Block getTailBlock() {
         return DBUtil.getTailBlock();
     }
-
 
 }

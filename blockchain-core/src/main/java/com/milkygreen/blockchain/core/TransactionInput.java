@@ -15,7 +15,7 @@ public class TransactionInput implements Serializable {
 
     /**
      * 组成该交易输入的输出
-     * 输入的金额不是凭空而来，而是从之前的交易生成的输出得来的。
+     * 输入的金额不是凭空而来，而是从之前的交易输出得来的。
      * 你想给别人转账，提前是必须别人先给你转过帐，而且你还没花出去。
      */
     private TransactionOutput unspentOutput;

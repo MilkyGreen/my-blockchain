@@ -6,6 +6,8 @@ import java.util.Objects;
 /**
  * @author yunmeng.li
  * @version 1.0.0
+ * 交易输出
+ * 代表交易的收款人和金额信息
  */
 public class TransactionOutput implements Serializable {
 
