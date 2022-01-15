@@ -29,7 +29,7 @@ public class TransactionUtil {
      */
     public static String signature(String privateKey, TransactionInput transactionInput){
         String data = transactionInput.getTransactionHash() + "-" + JsonUtil.toJson(transactionInput.getUnspentOutput());
-        return CryptoUtil.signature(privateKey,ByteUtil.hexStringToBytes(data));
+        return CryptoUtil.signature(privateKey,ByteUtil.stringToUtf8Bytes(data));
     }
 
     /**
@@ -41,7 +41,7 @@ public class TransactionUtil {
      */
     public static boolean validateSignature(String pubicKey,String signature,TransactionInput transactionInput){
         String data = transactionInput.getTransactionHash() + "-" + JsonUtil.toJson(transactionInput.getUnspentOutput());
-        return CryptoUtil.verifySignature(pubicKey,ByteUtil.hexStringToBytes(data),ByteUtil.hexStringToBytes(signature));
+        return CryptoUtil.verifySignature(pubicKey,ByteUtil.stringToUtf8Bytes(data),ByteUtil.hexStringToBytes(signature));
     }
 
     /**

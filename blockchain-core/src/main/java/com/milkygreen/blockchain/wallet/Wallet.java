@@ -9,10 +9,8 @@ import com.milkygreen.blockchain.util.ByteUtil;
 import com.milkygreen.blockchain.util.CryptoUtil;
 import com.milkygreen.blockchain.util.TransactionUtil;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  *  钱包。
@@ -21,11 +19,16 @@ import java.util.Set;
 public class Wallet {
 
     /**
+     * 保存本节钱包的地址-账号（实际应该保存在本地文件中，目前仅内存保存）
+     */
+    public Map<String, Account> accountDB = new ConcurrentHashMap<>();
+
+    /**
      * 新增账户
      * @param account
      */
     public void addAccount(Account account){
-        DBUtil.accountDB.put(account.getAddress(),account);
+        accountDB.put(account.getAddress(),account);
     }
 
     /**
@@ -33,7 +36,7 @@ public class Wallet {
      * @param address
      */
     public void removeAccount(String address){
-        DBUtil.accountDB.remove(address);
+        accountDB.remove(address);
     }
 
     /**
@@ -44,11 +47,11 @@ public class Wallet {
      * 2、凑出的金额是否大于支付金额，多的话需要给自己找零
      * 3、构建交易，放到未确认交易池中，等待被挖
      */
-    public Transaction pay(long amount,String payee){
+    public void pay(long amount,String payee){
         long sum = 0;
         List<TransactionOutput> payeeOutputs = new ArrayList<>();
         // 找出子节点所有账户
-        Collection<Account> accounts = DBUtil.accountDB.values();
+        Collection<Account> accounts = accountDB.values();
         out : for (Account account : accounts) {
             // 从自己的账户中，找未花费输出，看看是否能凑出要支付的金额
             Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(account.getAddress());
@@ -84,7 +87,7 @@ public class Wallet {
                 // 根据地址找到私钥，给input签名，这样别的节点拿到这个交易后，可以用公钥对签名进行验证
                 // 证明这个output确实是付款人自己发起的，因为只有付款人才有正确的私钥
                 String account = payeeOutput.getAccount();
-                Account accountObj = DBUtil.accountDB.get(account);
+                Account accountObj = accountDB.get(account);
                 transactionInput.setPublicKey(accountObj.getPublicKey());
                 String signature = TransactionUtil.signature(accountObj.getPrivateKey(),transactionInput);
                 transactionInput.setSignature(signature);
@@ -107,7 +110,7 @@ public class Wallet {
                 // 如果自己有一个10块的output，但是只想给别人支付1块钱，就需要生成两个新的output，一个1块的给对方，一个9块的给自己
                 // 这里新生成了一个账户用来接收找零。创建账户是没有成本的，这样可以更好的保证匿名性。
                 Account changeAccount = CryptoUtil.randomAccount();
-                DBUtil.accountDB.put(changeAccount.getAddress(),changeAccount);
+                accountDB.put(changeAccount.getAddress(),changeAccount);
                 TransactionOutput changeOutput = new TransactionOutput();
                 changeOutput.setAccount(changeAccount.getAddress());
                 changeOutput.setAmount(sum - amount);
@@ -117,7 +120,7 @@ public class Wallet {
             }
             transaction.setOutputs(outputs);
             transaction.setType(Transaction.TRANSACTION_TYPE_NORMAL);
-            return transaction;
+            DBUtil.unConfirmTransactionPool.put(transaction.getHash(),transaction);
         }
     }
 
@@ -127,12 +130,15 @@ public class Wallet {
      */
     public long getBalance(){
         int balance = 0;
-        Collection<Account> accounts = DBUtil.accountDB.values();
+        Collection<Account> accounts = accountDB.values();
         for (Account account : accounts) {
-            Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(account.getAddress());
-            if(transactionOutputs != null){
-                for (TransactionOutput output : transactionOutputs) {
-                    balance += output.getAmount();
+            synchronized (DBUtil.UTXO){
+                Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(account.getAddress());
+                if(transactionOutputs != null){
+                    Iterator<TransactionOutput> iterator = transactionOutputs.iterator();
+                    while (iterator.hasNext()){
+                        balance += iterator.next().getAmount();
+                    }
                 }
             }
         }

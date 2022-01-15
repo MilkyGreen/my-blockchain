@@ -38,7 +38,7 @@ public class Miner implements Runnable {
      * <p>
      * 在完善的区块链系统中，难度是会动态调整的：挖矿的人多，难度就提高。挖矿的人少，难度就降低。确保block生产的速度比较稳定。
      */
-    public final static String difficulty = "00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
+    public final static String difficulty = "00000fffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
     /**
      * 矿工是否在工作
@@ -60,6 +60,11 @@ public class Miner implements Runnable {
      */
     private Blockchain blockchain;
 
+    public Miner(Wallet wallet, Blockchain blockchain) {
+        this.wallet = wallet;
+        this.blockchain = blockchain;
+    }
+
     public Blockchain getBlockchain() {
         return blockchain;
     }
@@ -78,7 +83,7 @@ public class Miner implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        while (!Thread.currentThread().isInterrupted()) {
             if (isActive) {
                 // 获取当前的最新区块
                 Block tailBlock = DBUtil.getTailBlock();
@@ -139,7 +144,7 @@ public class Miner implements Runnable {
      */
     public List<Transaction> collectUnConfirmTransactions() {
         Map<String, Transaction> unConfirmTransactionPool = DBUtil.unConfirmTransactionPool;
-        if (unConfirmTransactionPool.size() > 0) {
+        if (unConfirmTransactionPool.size() == 0) {
             return null;
         }
         // 要按时间顺序处理交易

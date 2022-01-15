@@ -28,10 +28,13 @@ public class Blockchain {
     public void addBlock(Block block) {
         // 判断接收到的区块是否是本地最新高度加一
         Block preBlock = getTailBlock();
-        if (!preBlock.getHash().equals(block.getPreHash()) || preBlock.getHeight() + 1 != block.getHeight()) {
-            System.out.println("接收到非法的区块！");
-            return;
+        if(preBlock != null){
+            if (!preBlock.getHash().equals(block.getPreHash()) || preBlock.getHeight() + 1 != block.getHeight()) {
+                System.out.println("接收到非法的区块！");
+                return;
+            }
         }
+
         // 校验区块hash
         String hash = Block.calculateHash(block);
         if (!hash.equals(block.getHash())) {
@@ -79,20 +82,26 @@ public class Blockchain {
 
             // 保存交易本身
             DBUtil.hashTransactionDB.put(transaction.getHash(), transaction);
-            List<TransactionInput> inputs = transaction.getInputs();
-            List<TransactionOutput> outputs = transaction.getOutputs();
-            for (TransactionInput transactionInput : inputs) {
-                // 将input中的UTXO，从付款人账户中删除
-                TransactionOutput unspentOutput = transactionInput.getUnspentOutput();
-                Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(unspentOutput.getAccount());
-                transactionOutputs.remove(unspentOutput);
-                DBUtil.UTXO.put(unspentOutput.getAccount(), transactionOutputs);
+
+            if(transaction.getType() == Transaction.TRANSACTION_TYPE_NORMAL){
+                List<TransactionInput> inputs = transaction.getInputs();
+                for (TransactionInput transactionInput : inputs) {
+                    // 将input中的UTXO，从付款人账户中删除
+                    TransactionOutput unspentOutput = transactionInput.getUnspentOutput();
+                    Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(unspentOutput.getAccount());
+                    transactionOutputs.remove(unspentOutput);
+                    DBUtil.UTXO.put(unspentOutput.getAccount(), transactionOutputs);
+                }
             }
+
             // 将新的output放入到相应收款人的账户中
+            List<TransactionOutput> outputs = transaction.getOutputs();
             for (TransactionOutput transactionOutput : outputs) {
-                Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.get(transactionOutput.getAccount());
-                transactionOutputs.add(transactionOutput);
-                DBUtil.UTXO.put(transactionOutput.getAccount(), transactionOutputs);
+                synchronized (DBUtil.UTXO){
+                    Set<TransactionOutput> transactionOutputs = DBUtil.UTXO.getOrDefault(transactionOutput.getAccount(),new HashSet<>());
+                    transactionOutputs.add(transactionOutput);
+                    DBUtil.UTXO.put(transactionOutput.getAccount(), transactionOutputs);
+                }
             }
         }
         System.out.println("区块入库成功！");
@@ -137,10 +146,11 @@ public class Blockchain {
             for (TransactionOutput output : outputs) {
                 outputAmount += output.getAmount();
             }
-
-            if (inputAmount != outputAmount || inputAmount != transaction.getAmount() || outputAmount != transaction.getAmount()) {
-                System.out.println("交易的金额不匹配！");
-                return false;
+            if(transaction.getType() == Transaction.TRANSACTION_TYPE_NORMAL){
+                if (inputAmount != outputAmount) {
+                    System.out.println("交易的输入金额不匹配！");
+                    return false;
+                }
             }
         }
         return true;
