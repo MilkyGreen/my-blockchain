@@ -32,9 +32,9 @@
 代码里面有更详细的注释。
 
 参考：
-1. https://jeiwan.net/
-2. https://github.com/helloworldcoin/helloworldcoin-java
-3. https://github.com/liuchengxu/blockchain-tutorial
-4. https://bitcoin.org/bitcoin.pdf
-5. https://www.youtube.com/playlist?list=PLUl4u3cNGP63UUkfL0onkxF6MYgVa04Fn
+1. [jeiwan博客](https://jeiwan.net/)
+2. [邢开春 helloworldcoin 项目](https://github.com/helloworldcoin/helloworldcoin-java)
+3. [liuchengxu区块链教程汇总](https://github.com/liuchengxu/blockchain-tutorial)
+4. [比特币白皮书](https://bitcoin.org/bitcoin.pdf)
+5. [MIT区块链课程](https://www.youtube.com/playlist?list=PLUl4u3cNGP63UUkfL0onkxF6MYgVa04Fn)
 
