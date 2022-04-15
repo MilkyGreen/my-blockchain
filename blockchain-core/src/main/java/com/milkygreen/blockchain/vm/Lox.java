@@ -72,24 +72,7 @@ public class Lox {
      */
     private static void run(String source) {
         Scanner scanner = new Scanner(source);
-        List<Token> tokens = scanner.scanTokens(); // 扫描成token
 
-        Parser parser = new Parser(tokens);
-        List<Stmt> statements = parser.parse();
-
-        if (hadError){
-            return;
-        }
-
-        // 静态分析
-        Resolver resolver = new Resolver(interpreter);
-        resolver.resolve(statements);
-        if (hadError){
-            return;
-        }
-
-        // 执行表达式
-        interpreter.interpret(statements);
     }
 
     static void error(int line, String message) {
