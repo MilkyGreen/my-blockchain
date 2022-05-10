@@ -6,6 +6,8 @@ import java.util.List;
 import static com.milkygreen.blockchain.vm.TokenType.EOF;
 import static com.milkygreen.blockchain.vm.TokenType.SEMICOLON;
 
+import static com.milkygreen.blockchain.vm.TokenType.*;
+
 /**
  */
 public class Parser {
@@ -74,6 +76,71 @@ public class Parser {
     private Expr expression() {
         // todo 从优先级最低的赋值开始解析
         return null;
+    }
+
+    /**
+     * primary类型表达式指不可再拆分解析的字面token，字符串、数字、true、false、nil、括号 等
+     * @return
+     */
+    private Expr primary() {
+        if (match(FALSE)){
+            return new Expr.Literal(false);
+        }
+        if (match(TRUE)) {
+            return new Expr.Literal(true);
+        }
+        if (match(NIL)){
+            return new Expr.Literal(null);
+        }
+
+        if (match(NUMBER, STRING)) {
+            return new Expr.Literal(previous().literal);
+        }
+
+        if (match(SUPER)) {
+            // super关键字，它后面只能出现方法调用
+            Token keyword = previous();
+            consume(DOT, "Expect '.' after 'super'.");
+            // 解析方法名
+            Token method = consume(IDENTIFIER, "Expect superclass method name.");
+            // 返回一个父类方法调用表达式
+            return new Expr.Super(keyword, method);
+        }
+
+        if (match(THIS)){
+            // this关键字表达式
+            return new Expr.This(previous());
+        }
+
+        if (match(IDENTIFIER)) {
+            return new Expr.Variable(previous());
+        }
+
+        if (match(LEFT_PAREN)) {
+            // 括号，代表一个处在括号内的表达式，把里面的表达式解析一下，去掉两个括号
+            // 括号本身代表了一个最高优先级，因此里面的表达式会被优先解析
+            Expr expr = expression();
+            consume(RIGHT_PAREN, "Expect ')' after expression.");
+            return new Expr.Grouping(expr);
+        }
+
+        throw error(peek(), "Expect expression.");
+    }
+
+    /**
+     * 判断tokenType是否符合预期，如果符合，消费掉这个token
+     * @param types 预期类型
+     * @return
+     */
+    private boolean match(TokenType... types) {
+        for (TokenType type : types) {
+            if (check(type)) {
+                advance();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private boolean check(TokenType type) {
