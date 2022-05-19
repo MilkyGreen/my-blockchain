@@ -74,7 +74,66 @@ public class Parser {
     }
 
     private Expr expression() {
-        // todo 从优先级最低的赋值开始解析
+        // 从优先级最低的赋值开始解析
+        return assignment();
+    }
+
+    /**
+     * 赋值操作
+     * @return
+     */
+    private Expr assignment() {
+        // 先用更高级的OR解析左半边
+        Expr expr = or();
+
+        if (match(EQUAL)) {
+            // 如果存在 = 说明是一个赋值表达式，继续解析右边
+
+            Token equals = previous();
+
+            // 等号的右边，也是个表达式，用同优先级的assignment解析出来
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                // 左边如果是一个变量，是变量赋值
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, value);
+            } else if (expr instanceof Expr.Get) {
+                // 左边如果是一个字段的get，则是对象字段的赋值，（set方法其实是左边先出现get，后面跟 = value）
+                Expr.Get get = (Expr.Get)expr;
+                return new Expr.Set(get.object, get.name, value);
+            }
+
+            error(equals, "Invalid assignment target.");
+        }else if(match(PLUS_PLUS)){
+            // 右边跟的 ++, 是一个 +1操作
+            Token line = previous();
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, new Expr.Binary(expr,new Token(PLUS,"+",null,line.line),new Expr.Literal(1d)));
+            }else{
+                error(line, "Invalid ++ target.");
+            }
+        }else if(match(MINUS_MINUS)){
+            // 左边跟的 -- ，是一个-1操作
+            Token line = previous();
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable)expr).name;
+                return new Expr.Assign(name, new Expr.Binary(expr,new Token(MINUS,"-",null,line.line),new Expr.Literal(1d)));
+            }else{
+                error(line, "Invalid ++ target.");
+            }
+        }
+
+        return expr;
+    }
+
+    /**
+     * 逻辑操作 ||
+     * @return
+     */
+    private Expr or() {
+        // todo
         return null;
     }
 
